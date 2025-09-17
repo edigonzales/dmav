@@ -205,31 +205,32 @@
         <!-- <xsl:message><xsl:value-of select="$fosnr"/></xsl:message> -->
         <!-- <xsl:message>Hallo Welt</xsl:message> -->
         
-        <ili:transfer xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS">
-            <xsl:copy-of select="ili:headersection"/>
+        <xsl:copy>
+            <xsl:copy-of select="@*"/>
+            <xsl:copy-of copy-namespaces="no" select="ili:headersection"/>
             <ili:datasection>
                 <FixpunkteLV_V1_0:FixpunkteLV ili:bid="bb3b5f52-707b-4ac6-9cf8-4d03ef37bb3a">
-                    <xsl:copy-of select="$FixpunkteLV_V1_0_LFP/ili:transfer/ili:datasection/FixpunkteLV_V1_0:FixpunkteLV/FixpunkteLV_V1_0:LFP1"/>
-                    <xsl:copy-of select="$FixpunkteLV_V1_0_HFP/ili:transfer/ili:datasection/FixpunkteLV_V1_0:FixpunkteLV/FixpunkteLV_V1_0:HFP1"/>
+                    <xsl:copy-of copy-namespaces="no" select="$FixpunkteLV_V1_0_LFP/ili:transfer/ili:datasection/FixpunkteLV_V1_0:FixpunkteLV/FixpunkteLV_V1_0:LFP1"/>
+                    <xsl:copy-of copy-namespaces="no" select="$FixpunkteLV_V1_0_HFP/ili:transfer/ili:datasection/FixpunkteLV_V1_0:FixpunkteLV/FixpunkteLV_V1_0:HFP1"/>
                 </FixpunkteLV_V1_0:FixpunkteLV>
                 <!--<xsl:copy-of select="$KGKCGC_FPDS2_V1_1/ili:transfer/ili:datasection/*"/>-->
-                <xsl:copy-of select="$KGKCGC_FPDS2_V1_1/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_FixpunkteAVKategorie3_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Bodenbedeckung_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Einzelobjekte_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Nomenklatur_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Grundstuecke_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Rohrleitungen_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_HoheitsgrenzenLV_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_HoheitsgrenzenAV_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Toleranzstufen_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_DauerndeBodenverschiebungen_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$OfficialIndexOfLocalities_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Gebaeudeadressen_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAVSUP_UntereinheitGrundbuch_V1_0/ili:transfer/ili:datasection/*"/>
-                <xsl:copy-of select="$DMAV_Dienstbarkeitsgrenzen_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$KGKCGC_FPDS2_V1_1/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_FixpunkteAVKategorie3_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Bodenbedeckung_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Einzelobjekte_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Nomenklatur_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Grundstuecke_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Rohrleitungen_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_HoheitsgrenzenLV_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_HoheitsgrenzenAV_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Toleranzstufen_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_DauerndeBodenverschiebungen_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$OfficialIndexOfLocalities_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Gebaeudeadressen_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAVSUP_UntereinheitGrundbuch_V1_0/ili:transfer/ili:datasection/*"/>
+                <xsl:copy-of copy-namespaces="no" select="$DMAV_Dienstbarkeitsgrenzen_V1_0/ili:transfer/ili:datasection/*"/>
             </ili:datasection>
-        </ili:transfer>
+        </xsl:copy>
     </xsl:template>
 
 </xsl:stylesheet>
