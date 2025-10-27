@@ -9,7 +9,7 @@ plugins {
 
 group = 'io.github.sogis'
 
-version '0.0.10'+System.getProperty('release','-SNAPSHOT')
+version '0.0.11'+System.getProperty('release','-SNAPSHOT')
 
 def myArtifactId = "dmav"
 
