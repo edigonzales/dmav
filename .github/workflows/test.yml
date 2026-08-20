@@ -3,6 +3,9 @@ name: test
 on:
   pull_request:
   workflow_dispatch:
+  push:
+    branches:
+      - perf/model-loader-cache
 
 jobs:
   test:
