@@ -61,9 +61,17 @@ final class IoxTestSupport {
     }
 
     static TransferSnapshot read(Path path, TransferDescription td) throws IoxException {
+        return read(path, td, new String[0]);
+    }
+
+    static TransferSnapshot read(Path path, TransferDescription td, String... topicFilter) throws IoxException {
         IoxReader reader = new ReaderFactory().createReader(path.toFile(), null);
         if (reader instanceof IoxIliReader) {
-            ((IoxIliReader) reader).setModel(td);
+            IoxIliReader iliReader = (IoxIliReader) reader;
+            iliReader.setModel(td);
+            if (topicFilter != null && topicFilter.length > 0) {
+                iliReader.setTopicFilter(topicFilter);
+            }
         }
 
         TransferSnapshot transfer = new TransferSnapshot();
