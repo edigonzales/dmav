@@ -16,6 +16,7 @@ import java.util.Set;
 final class ModelLoader {
 
     static final String CURRENT_DMAV_MODEL = "DMAVTYM_Alles_V1_1";
+    static final String LEGACY_DMAV_MODEL = "DMAVTYM_Alles_V1_0";
 
     private static final String[] DEFAULT_REPOSITORIES = {
         "https://models.geo.admin.ch",
@@ -34,6 +35,16 @@ final class ModelLoader {
 
     TransferDescription compileCurrentDmav() throws Ili2cFailure {
         return compileModels(List.of(CURRENT_DMAV_MODEL));
+    }
+
+    TransferDescription compileForTransferModels(Collection<String> modelNames) throws Ili2cFailure {
+        if (containsDmavVersion(modelNames, "_V1_1")) {
+            return compileCurrentDmav();
+        }
+        if (containsDmavVersion(modelNames, "_V1_0")) {
+            return compileModels(List.of(LEGACY_DMAV_MODEL));
+        }
+        return compileModels(modelNames);
     }
 
     TransferDescription compileModels(Collection<String> modelNames) throws Ili2cFailure {
@@ -71,5 +82,14 @@ final class ModelLoader {
             throw new Ili2cFailure("Failed to compile models: " + uniqueNames);
         }
         return td;
+    }
+
+    private static boolean containsDmavVersion(Collection<String> modelNames, String suffix) {
+        for (String modelName : modelNames) {
+            if (modelName != null && modelName.startsWith("DMAV") && modelName.endsWith(suffix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
