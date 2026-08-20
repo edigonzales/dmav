@@ -28,7 +28,6 @@ repositories {
 dependencies {
     testImplementation libs.junit.jupiter
     testImplementation "ch.interlis:ilivalidator:1.14.5"
-    testImplementation "ch.interlis:iox-ili:1.23.4"
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -36,7 +35,10 @@ dependencies {
     implementation 'info.picocli:picocli:4.7.6'
     implementation 'info.picocli:picocli-codegen:4.7.6'
     annotationProcessor 'info.picocli:picocli-codegen:4.7.6'
-    
+
+    implementation 'ch.interlis:iox-ili:1.24.4'
+    implementation 'ch.interlis:ili2c-tool:5.6.8'
+    implementation 'ch.interlis:ili2c-core:5.6.8'
     implementation libs.saxon.he
 }
 
@@ -111,7 +113,7 @@ if (!version.toString().endsWith("SNAPSHOT")) {
 
 nexusPublishing {
     repositories {
-        sonatype { 
+        sonatype {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
             username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
@@ -122,7 +124,7 @@ nexusPublishing {
 
 jreleaser {
     gitRootSearch = true
-    
+
     project {
         name = myArtifactId
         description = 'Werkzeugkasten für das Handling mit DMAV-Transferdateien.'
