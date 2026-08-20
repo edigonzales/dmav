@@ -16,7 +16,6 @@ import ch.interlis.iox.StartTransferEvent;
 import ch.interlis.iox_j.IoxIliReader;
 import ch.interlis.iox_j.utility.ReaderFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ public class Splitter {
 
             StartTransferEvent sourceTransfer = (StartTransferEvent) firstEvent;
             List<String> modelNames = extractModelNames(firstEvent);
-            TransferDescription td = modelLoader.compileModels(modelNames);
+            TransferDescription td = modelLoader.compileForTransferModels(modelNames);
             ((IoxIliReader) reader).setModel(td);
 
             XtfWriter currentWriter = null;
