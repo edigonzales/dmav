@@ -1,11 +1,7 @@
 package ch.so.agi.dmav;
 
-import ch.interlis.ili2c.Ili2cException;
 import ch.interlis.ili2c.Ili2cFailure;
-import ch.interlis.ili2c.Ili2cSettings;
-import ch.interlis.ili2c.config.Configuration;
 import ch.interlis.ili2c.metamodel.TransferDescription;
-import ch.interlis.ilirepository.IliManager;
 import ch.interlis.iom.IomObject;
 import ch.interlis.iox.EndBasketEvent;
 import ch.interlis.iox.EndTransferEvent;
@@ -32,32 +28,7 @@ final class IoxTestSupport {
     }
 
     static TransferDescription compileModel(String modelName, String... repositories) throws Ili2cFailure {
-        IliManager manager = new IliManager();
-        manager.setRepositories(repositories);
-
-        ArrayList<String> entries = new ArrayList<>();
-        entries.add(modelName);
-
-        Configuration config;
-        try {
-            config = manager.getConfigWithFiles(entries, null, 0.0);
-        } catch (Ili2cException e) {
-            throw new Ili2cFailure(e);
-        }
-
-        if (config == null) {
-            throw new Ili2cFailure("Failed to create configuration for model: " + modelName);
-        }
-
-        Ili2cSettings settings = new Ili2cSettings();
-        ch.interlis.ili2c.Main.setDefaultIli2cPathMap(settings);
-        settings.setIlidirs(String.join(";", repositories));
-
-        TransferDescription td = ch.interlis.ili2c.Main.runCompiler(config, settings);
-        if (td == null) {
-            throw new Ili2cFailure("Failed to compile model: " + modelName);
-        }
-        return td;
+        return new ModelLoader(repositories).compileModels(List.of(modelName));
     }
 
     static TransferSnapshot read(Path path, TransferDescription td) throws IoxException {
