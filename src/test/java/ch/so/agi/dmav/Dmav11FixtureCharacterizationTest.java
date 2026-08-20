@@ -1,6 +1,7 @@
 package ch.so.agi.dmav;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,14 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class Dmav11FixtureCharacterizationTest {
 
     private static final Path MODEL = Path.of("src/test/data/dmav11/DMAVTYM_Alles_V1_1.ili");
     private static final Path FIXTURE = Path.of("src/test/data/dmav11/DMAVTYM_Alles_V1_1.reduced.xtf");
+    private static final Path TWO_BASKET_FIXTURE =
+            Path.of("src/test/data/dmav11/DMAV_FixpunkteAVKategorie3_V1_1.two-baskets.xtf");
 
     private static final String BASKET_TYPE =
             "DMAV_FixpunkteAVKategorie3_V1_1.FixpunkteAVKategorie3";
@@ -77,5 +82,42 @@ class Dmav11FixtureCharacterizationTest {
 
         assertTrue(transfer.allTids().containsAll(transfer.allReferenceTargets()));
         assertEquals(Set.of(NF_TID), transfer.allReferenceTargets());
+    }
+
+    @Test
+    void ioxSplitterPreservesDmav11BasketTidAndReferences(@TempDir Path tempDir) throws Exception {
+        Splitter splitter = new Splitter();
+        assertTrue(splitter.run(FIXTURE, "449", tempDir));
+
+        Path output = tempDir.resolve("DMAV_FixpunkteAVKategorie3_V1_1.449.xtf");
+        assertTrue(Files.exists(output));
+        assertFalse(Files.exists(tempDir.resolve("DMAV_split_logging.xtf")));
+
+        IoxTestSupport.BasketSnapshot source = IoxTestSupport.read(FIXTURE, dmav11Model).basket(BASKET_TYPE);
+        IoxTestSupport.BasketSnapshot split = IoxTestSupport.read(output, dmav11Model).basket(BASKET_TYPE);
+
+        assertNotNull(source);
+        assertNotNull(split);
+        assertEquals(source.getBid(), split.getBid());
+        assertEquals(source.tidsByTag(), split.tidsByTag());
+        assertEquals(source.referencesByTid(), split.referencesByTid());
+    }
+
+    @Test
+    void ioxSplitterKeepsMultipleBasketsOfSameModelInOneFile(@TempDir Path tempDir) throws Exception {
+        Splitter splitter = new Splitter();
+        assertTrue(splitter.run(TWO_BASKET_FIXTURE, "449", tempDir));
+
+        Path output = tempDir.resolve("DMAV_FixpunkteAVKategorie3_V1_1.449.xtf");
+        IoxTestSupport.TransferSnapshot transfer = IoxTestSupport.read(output, dmav11Model);
+
+        assertEquals(2, transfer.getBaskets().size());
+        assertEquals(
+                List.of(
+                        "11111111-1111-4111-8111-111111111111",
+                        "22222222-2222-4222-8222-222222222222"),
+                transfer.getBaskets().stream()
+                        .map(IoxTestSupport.BasketSnapshot::getBid)
+                        .collect(Collectors.toList()));
     }
 }
