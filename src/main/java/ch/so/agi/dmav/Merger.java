@@ -132,12 +132,6 @@ public class Merger {
                 sources.put(key, materializeEmptyResource(key, fosnr, workDir));
             }
         }
-
-        // Preserve configured extension models as well. The old XSLT ignored unknown
-        // keys; the IOX merger can safely append them once their model is available.
-        for (Map.Entry<String, Path> entry : configured.entrySet()) {
-            sources.putIfAbsent(entry.getKey(), entry.getValue());
-        }
         return sources;
     }
 
