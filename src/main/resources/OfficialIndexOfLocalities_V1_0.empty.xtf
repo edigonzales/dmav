@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><ili:transfer xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:geom="http://www.interlis.ch/geometry/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:CoordSys="http://www.interlis.ch/xtf/2.4/CoordSys" xmlns:Units="http://www.interlis.ch/xtf/2.4/Units" xmlns:Text_V2="http://www.interlis.ch/xtf/2.4/Text_V2" xmlns:Geometry_V2="http://www.interlis.ch/xtf/2.4/Geometry_V2" xmlns:GeometryCHLV03_V2="http://www.interlis.ch/xtf/2.4/GeometryCHLV03_V2" xmlns:GeometryCHLV95_V2="http://www.interlis.ch/xtf/2.4/GeometryCHLV95_V2" xmlns:OfficialIndexOfLocalities_V1_0="http://www.interlis.ch/xtf/2.4/OfficialIndexOfLocalities_V1_0">
-<ili:headersection><ili:models><ili:model>CoordSys</ili:model><ili:model>Units</ili:model><ili:model>Text_V2</ili:model><ili:model>Geometry_V2</ili:model><ili:model>GeometryCHLV03_V2</ili:model><ili:model>GeometryCHLV95_V2</ili:model><ili:model>OfficialIndexOfLocalities_V1_0</ili:model></ili:models><ili:sender>ili2fme-7.3.2-42884f6784f997af185b12923691645b1b39fe38</ili:sender></ili:headersection>
-<ili:datasection>
-<OfficialIndexOfLocalities_V1_0:OfficialIndexOfLocalities ili:bid="OfficialIndexOfLocalities_V1_0.OfficialIndexOfLocalities">
-</OfficialIndexOfLocalities_V1_0:OfficialIndexOfLocalities>
-</ili:datasection>
-</ili:transfer>
