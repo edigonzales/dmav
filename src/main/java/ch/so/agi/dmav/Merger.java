@@ -1,246 +1,256 @@
 package ch.so.agi.dmav;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
+import ch.ehi.basics.settings.Settings;
+import ch.interlis.ili2c.metamodel.TransferDescription;
+import ch.interlis.iom.IomObject;
+import ch.interlis.iom_j.xtf.XtfStartTransferEvent;
+import ch.interlis.iom_j.xtf.XtfWriter;
+import ch.interlis.iox.EndBasketEvent;
+import ch.interlis.iox.EndTransferEvent;
+import ch.interlis.iox.IoxEvent;
+import ch.interlis.iox.IoxException;
+import ch.interlis.iox.IoxReader;
+import ch.interlis.iox.ObjectEvent;
+import ch.interlis.iox.StartBasketEvent;
+import ch.interlis.iox.StartTransferEvent;
+import ch.interlis.iox_j.IoxIliReader;
+import ch.interlis.iox_j.utility.ReaderFactory;
+
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.xml.transform.stream.StreamSource;
-
-import net.sf.saxon.s9api.Processor;
-import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
-import net.sf.saxon.s9api.Serializer;
-import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.s9api.XsltCompiler;
-import net.sf.saxon.s9api.XsltExecutable;
-import net.sf.saxon.s9api.XsltTransformer;
+import java.util.Set;
 
 public class Merger {
 
-    // Bei FixpunkteLV ist es nicht mehr exakt der Modellname, 
-    // das diese Daten in zwei XTF bereitgestellt werden.
-    // Der Einfachheit halber muss aber die XSL-Transformation
-    // die Dateinamen kennen.
-    // Und die Modelle brauche ich für das Laden der Ressourcen.
-    Map<String, String> keysModels = new HashMap<>()
-    {{
-         put("DMAVSUP_UntereinheitGrundbuch_V1_0", "DMAVSUP_UntereinheitGrundbuch_V1_0");
-         put("DMAV_Toleranzstufen_V1_0", "DMAV_Toleranzstufen_V1_0");
-         put("OfficialIndexOfLocalities_V1_0", "OfficialIndexOfLocalities_V1_0");
-         put("DMAV_HoheitsgrenzenLV_V1_0", "DMAV_HoheitsgrenzenLV_V1_0");
-         put("DMAV_HoheitsgrenzenAV_V1_0", "DMAV_HoheitsgrenzenAV_V1_0");
-         put("FixpunkteLV_V1_0_LFP", "FixpunkteLV_V1_0");
-         put("FixpunkteLV_V1_0_HFP", "FixpunkteLV_V1_0");
-         put("DMAV_Nomenklatur_V1_0","DMAV_Nomenklatur_V1_0");
-         put("DMAV_Gebaeudeadressen_V1_0","DMAV_Gebaeudeadressen_V1_0");
-         put("DMAV_Dienstbarkeitsgrenzen_V1_0","DMAV_Dienstbarkeitsgrenzen_V1_0");
-         put("DMAV_Einzelobjekte_V1_0","DMAV_Einzelobjekte_V1_0");
-         put("DMAV_FixpunkteAVKategorie3_V1_0","DMAV_FixpunkteAVKategorie3_V1_0");
-         put("DMAV_Bodenbedeckung_V1_0","DMAV_Bodenbedeckung_V1_0");
-         put("DMAV_Rohrleitungen_V1_0","DMAV_Rohrleitungen_V1_0");
-         put("DMAV_Grundstuecke_V1_0","DMAV_Grundstuecke_V1_0");
-         put("KGKCGC_FPDS2_V1_1","KGKCGC_FPDS2_V1_1");
-         put("DMAV_DauerndeBodenverschiebungen_V1_0","DMAV_DauerndeBodenverschiebungen_V1_0");
-    }};
+    private static final String FIXPUNKTE_LV_LFP = "FixpunkteLV_V1_0_LFP";
+    private static final String FIXPUNKTE_LV_HFP = "FixpunkteLV_V1_0_HFP";
+    private static final String FIXPUNKTE_LV_BASKET = "FixpunkteLV_V1_0.FixpunkteLV";
+    private static final String FIXPUNKTE_LV_BID = "bb3b5f52-707b-4ac6-9cf8-4d03ef37bb3a";
+
+    private static final List<String> LEGACY_SOURCE_ORDER = List.of(
+            FIXPUNKTE_LV_LFP,
+            FIXPUNKTE_LV_HFP,
+            "KGKCGC_FPDS2_V1_1",
+            "DMAV_FixpunkteAVKategorie3_V1_0",
+            "DMAV_Bodenbedeckung_V1_0",
+            "DMAV_Einzelobjekte_V1_0",
+            "DMAV_Nomenklatur_V1_0",
+            "DMAV_Grundstuecke_V1_0",
+            "DMAV_Rohrleitungen_V1_0",
+            "DMAV_HoheitsgrenzenLV_V1_0",
+            "DMAV_HoheitsgrenzenAV_V1_0",
+            "DMAV_Toleranzstufen_V1_0",
+            "DMAV_DauerndeBodenverschiebungen_V1_0",
+            "OfficialIndexOfLocalities_V1_0",
+            "DMAV_Gebaeudeadressen_V1_0",
+            "DMAVSUP_UntereinheitGrundbuch_V1_0",
+            "DMAV_Dienstbarkeitsgrenzen_V1_0");
+
+    private final InputResolver inputResolver;
+    private final ModelLoader modelLoader;
+
+    public Merger() {
+        this(new InputResolver(), new ModelLoader());
+    }
+
+    Merger(InputResolver inputResolver, ModelLoader modelLoader) {
+        this.inputResolver = inputResolver;
+        this.modelLoader = modelLoader;
+    }
 
     public boolean run(Path configFile, String fosnr, Path outputDir) {
-        
-        // Speicherorte der Dateien aus Config-Datei lesen und BFS-Nummer
-        // ersetzen.
-        Map<String,String> files = new HashMap<>();
+        Path workDir = null;
         try {
-            files = ConfigParser.read(configFile);
-            
-            for (Map.Entry<String, String> entry : files.entrySet()) {
-                String key = entry.getKey().trim();
-                String value = entry.getValue().trim();
-                String newValue = value.replace("${fosnr}", fosnr);
-                files.put(key, newValue);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        
-        // Dateien in temporäres Verzeichnis kopieren. 
-        // Ggf. vorgängig herunterladen.
-        Path tmpdir = null;        
-        try {
-            tmpdir = Files.createTempDirectory("dmav_");
-            //tmpdir = Paths.get("/Users/stefan/tmp/merger");
-            
-            // Leere (empty baskets) XTF laden, damit jedes
-            // Thema (Modell) vorhanden ist. Damit stimmt mein
-            // statischer ilimodels-Header.
-            for (String model : keysModels.keySet()) {
-                loadAndRenameResource(model, tmpdir, fosnr);
-            }
-
-            for (Map.Entry<String, String> entry : files.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                
-//                System.out.println("key: " +key);
-//                System.out.println("value: " +value);
-                
-                if (value.startsWith("http")) {
-                    String fileURL = value;
-                    Path finalTargetPath = tmpdir.resolve(key+"."+fosnr+".xtf");
-
-                    if (fileURL.endsWith(".zip")) {
-                        URL url = new URL(fileURL);
-                        String fileName = Paths.get(url.getPath()).getFileName().toString();
-                        
-                        Path zipTargetPath = tmpdir.resolve(fileName);
-
-                        try (InputStream in = url.openStream()) {
-                            System.err.println("Downloading: " + fileURL);
-                            Files.copy(in, zipTargetPath, StandardCopyOption.REPLACE_EXISTING);
-                            getXtfFromZip(zipTargetPath, finalTargetPath);
-                        }
-                        
-                        if (!finalTargetPath.toFile().exists()) {
-                            System.err.println(key + ": No XTF file found in ZIP file.");
-                        }
-                    } else {
-                        try (InputStream in = new URL(fileURL).openStream()) {
-                            Files.copy(in, finalTargetPath, StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    }                    
-                } else {
-                    Path xtfFile = Paths.get(tmpdir.toAbsolutePath().toString(), key+"."+fosnr+".xtf");
-                    if (value.endsWith(".zip")) {
-                        getXtfFromZip(Paths.get(value), xtfFile);
-                        if (!xtfFile.toFile().exists()) {
-                            System.err.println(key + ": No XTF file found in ZIP file.");
-                        }
-                    } else {
-                        Files.copy(Paths.get(value), xtfFile, StandardCopyOption.REPLACE_EXISTING);                                            
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-                        
-        // XML-Skeleton und XSL-Tranformation aus Resourcen
-        // laden.
-        Path xslFile = null;
-        Path inputXmlFile = null;
-        Path outputXmlFile = outputDir.resolve("DMAV."+fosnr+".xtf");
-        try {
-            xslFile = Utils.loadFile("merge.xsl", tmpdir);
-            inputXmlFile = Utils.loadFile("DMAV_Skeleton.xtf", tmpdir);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        
-//        try {
-//            Thread.sleep(60000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-        // XSL-Transformation durchführen
-        Processor proc = new Processor(false);
-        XsltCompiler comp = proc.newXsltCompiler();
-        XsltTransformer trans = null;
-        try {
-            XsltExecutable exp = comp.compile(new StreamSource(xslFile.toFile()));
-            XdmNode source = proc.newDocumentBuilder().build(new StreamSource(inputXmlFile.toFile()));
-            Serializer outXml = proc.newSerializer(outputXmlFile.toFile());
-            trans = exp.load();
-            trans.setInitialContextNode(source);
-            trans.setDestination(outXml);
-            trans.setParameter(new QName("fosnr"), (XdmValue) XdmAtomicValue.makeAtomicValue(fosnr));
-            trans.transform();
-        } catch (SaxonApiException e) {
+            Files.createDirectories(outputDir);
+            workDir = Files.createTempDirectory("dmav_");
+            merge(configFile, fosnr, outputDir, workDir);
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         } finally {
-            if (trans != null) {                
-                trans.close();
+            if (workDir != null) {
+                try {
+                    Utils.deleteDirectory(workDir);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        
-        // Temp-Daten/-Verzeichnis aufräumen
-        try {
-            Utils.deleteDirectory(tmpdir);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        
-        return true;
-    }  
-    
-    private static void loadAndRenameResource(String resourceName, Path targetDir, String replacement) throws IOException {
-        String resourceFileName = resourceName + ".empty.xtf";
-
-        try (InputStream resourceStream = Merger.class.getClassLoader().getResourceAsStream(resourceFileName)) {
-            if (resourceStream == null) {
-                throw new FileNotFoundException("Resource file not found: " + resourceFileName);
-            }
-
-            String renamedFileName = resourceFileName.replace("empty", replacement);
-
-            Path targetFilePath = targetDir.resolve(renamedFileName);
-            Files.copy(resourceStream, targetFilePath, StandardCopyOption.REPLACE_EXISTING);
         }
     }
-    
-    private static void getXtfFromZip(Path zipFile, Path xtfFile) throws IOException {
-        Path tmpdir = Files.createTempDirectory("dmav_zip_");
-        ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile));
-        ZipEntry zentry;
-        while ((zentry = zis.getNextEntry()) != null) {                                
-            File outputFile = new File(tmpdir.toFile().getAbsolutePath(), zentry.getName());
-            
-            if (zentry.isDirectory()) {
-                outputFile.mkdirs();
-            } else {
-                outputFile.getParentFile().mkdirs();
-                try (FileOutputStream fos = new FileOutputStream(outputFile);
-                        BufferedOutputStream bos = new BufferedOutputStream(fos)) {
 
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
+    private void merge(Path configFile, String fosnr, Path outputDir, Path workDir) throws Exception {
+        Map<String, Path> configured = inputResolver.resolve(configFile, fosnr, workDir);
+        Map<String, Path> sources = prepareLegacySources(configured, fosnr, workDir);
 
-                    while ((bytesRead = zis.read(buffer)) != -1) {
-                        bos.write(buffer, 0, bytesRead);
-                    }
-                    
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new IOException("Could not store file " + zipFile.getFileName().toString() + ". Please try again!");
+        Set<String> modelNames = new LinkedHashSet<>();
+        for (Path source : sources.values()) {
+            modelNames.addAll(readModelNames(source));
+        }
+        // Keep the umbrella model as the final top-level model. This guarantees an
+        // XTF 2.4 writer while still compiling additional non-DMAV source models.
+        modelNames.remove(ModelLoader.LEGACY_DMAV_MODEL);
+        modelNames.add(ModelLoader.LEGACY_DMAV_MODEL);
+
+        TransferDescription td = modelLoader.compileModels(modelNames);
+        Path outputFile = outputDir.resolve("DMAV." + fosnr + ".xtf");
+
+        try (IoxWriterResource output = new IoxWriterResource(new XtfWriter(outputFile.toFile(), td))) {
+            XtfWriter writer = output.writer;
+            writer.write(new ch.interlis.iox_j.StartTransferEvent("DMAVMerger", null));
+
+            writeFixpunkteLv(writer, sources.get(FIXPUNKTE_LV_LFP), sources.get(FIXPUNKTE_LV_HFP), td);
+
+            for (Map.Entry<String, Path> source : sources.entrySet()) {
+                if (FIXPUNKTE_LV_LFP.equals(source.getKey()) || FIXPUNKTE_LV_HFP.equals(source.getKey())) {
+                    continue;
                 }
-                if (outputFile.toString().toLowerCase().endsWith(".xtf")) {
-                    Files.copy(outputFile.toPath(), xtfFile, StandardCopyOption.REPLACE_EXISTING);                                  
+                copyBaskets(source.getValue(), writer, td);
+            }
+
+            writer.write(new ch.interlis.iox_j.EndTransferEvent());
+        }
+    }
+
+    private Map<String, Path> prepareLegacySources(
+            Map<String, Path> configured, String fosnr, Path workDir) throws IOException {
+        Map<String, Path> sources = new LinkedHashMap<>();
+        for (String key : LEGACY_SOURCE_ORDER) {
+            Path configuredSource = configured.get(key);
+            if (configuredSource != null) {
+                sources.put(key, configuredSource);
+            } else {
+                sources.put(key, materializeEmptyResource(key, fosnr, workDir));
+            }
+        }
+
+        // Preserve configured extension models as well. The old XSLT ignored unknown
+        // keys; the IOX merger can safely append them once their model is available.
+        for (Map.Entry<String, Path> entry : configured.entrySet()) {
+            sources.putIfAbsent(entry.getKey(), entry.getValue());
+        }
+        return sources;
+    }
+
+    private static Path materializeEmptyResource(String key, String fosnr, Path workDir) throws IOException {
+        String resourceName = key + ".empty.xtf";
+        Path target = workDir.resolve(key + "." + fosnr + ".empty.xtf");
+        try (InputStream in = Merger.class.getClassLoader().getResourceAsStream(resourceName)) {
+            if (in == null) {
+                throw new FileNotFoundException("Resource file not found: " + resourceName);
+            }
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return target;
+    }
+
+    private static List<String> readModelNames(Path source) throws IoxException {
+        IoxReader reader = new ReaderFactory().createReader(source.toFile(), null, new Settings());
+        try {
+            IoxEvent event = reader.read();
+            if (!(event instanceof XtfStartTransferEvent)) {
+                throw new IoxException("XTF header does not expose INTERLIS models: " + source);
+            }
+
+            Map<String, IomObject> headerObjects = ((XtfStartTransferEvent) event).getHeaderObjects();
+            List<String> modelNames = new ArrayList<>();
+            if (headerObjects != null) {
+                for (IomObject headerObject : headerObjects.values()) {
+                    String modelName = headerObject.getattrvalue("model");
+                    if (modelName != null && !modelName.isBlank()) {
+                        modelNames.add(modelName);
+                    }
+                }
+            }
+            if (modelNames.isEmpty()) {
+                throw new IoxException("No INTERLIS models found in XTF header: " + source);
+            }
+            return modelNames;
+        } finally {
+            reader.close();
+        }
+    }
+
+    private static void copyBaskets(Path source, XtfWriter writer, TransferDescription td) throws IoxException {
+        IoxReader reader = openReader(source, td);
+        try {
+            IoxEvent event;
+            while ((event = reader.read()) != null) {
+                if (event instanceof StartBasketEvent
+                        || event instanceof ObjectEvent
+                        || event instanceof EndBasketEvent) {
+                    writer.write(event);
+                } else if (event instanceof EndTransferEvent) {
                     break;
                 }
             }
-            zis.closeEntry();
+        } finally {
+            reader.close();
         }
-        zis.close();
-   
     }
 
+    private static void writeFixpunkteLv(
+            XtfWriter writer, Path lfpSource, Path hfpSource, TransferDescription td) throws IoxException {
+        writer.write(new ch.interlis.iox_j.StartBasketEvent(FIXPUNKTE_LV_BASKET, FIXPUNKTE_LV_BID));
+        copyObjectsByClass(lfpSource, writer, td, ".LFP1");
+        copyObjectsByClass(hfpSource, writer, td, ".HFP1");
+        writer.write(new ch.interlis.iox_j.EndBasketEvent());
+    }
+
+    private static void copyObjectsByClass(
+            Path source, XtfWriter writer, TransferDescription td, String classSuffix) throws IoxException {
+        IoxReader reader = openReader(source, td);
+        try {
+            IoxEvent event;
+            while ((event = reader.read()) != null) {
+                if (event instanceof ObjectEvent) {
+                    IomObject object = ((ObjectEvent) event).getIomObject();
+                    if (object.getobjecttag().endsWith(classSuffix)) {
+                        writer.write(event);
+                    }
+                } else if (event instanceof EndTransferEvent) {
+                    break;
+                }
+            }
+        } finally {
+            reader.close();
+        }
+    }
+
+    private static IoxReader openReader(Path source, TransferDescription td) throws IoxException {
+        IoxReader reader = new ReaderFactory().createReader(source.toFile(), null, new Settings());
+        IoxEvent firstEvent = reader.read();
+        if (!(firstEvent instanceof StartTransferEvent)) {
+            reader.close();
+            throw new IoxException("Expected StartTransferEvent in " + source);
+        }
+        if (!(reader instanceof IoxIliReader)) {
+            reader.close();
+            throw new IoxException("Input is not an INTERLIS transfer file: " + source);
+        }
+        ((IoxIliReader) reader).setModel(td);
+        return reader;
+    }
+
+    private static final class IoxWriterResource implements AutoCloseable {
+        private final XtfWriter writer;
+
+        private IoxWriterResource(XtfWriter writer) {
+            this.writer = writer;
+        }
+
+        @Override
+        public void close() throws IoxException {
+            writer.close();
+        }
+    }
 }
