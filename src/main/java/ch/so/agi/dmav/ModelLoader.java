@@ -4,19 +4,27 @@ import ch.interlis.ili2c.Ili2cException;
 import ch.interlis.ili2c.Ili2cFailure;
 import ch.interlis.ili2c.Ili2cSettings;
 import ch.interlis.ili2c.config.Configuration;
+import ch.interlis.ili2c.metamodel.Element;
+import ch.interlis.ili2c.metamodel.Model;
+import ch.interlis.ili2c.metamodel.Topic;
 import ch.interlis.ili2c.metamodel.TransferDescription;
 import ch.interlis.ilirepository.IliManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 final class ModelLoader {
 
     static final String CURRENT_DMAV_MODEL = "DMAVTYM_Alles_V1_1";
     static final String LEGACY_DMAV_MODEL = "DMAVTYM_Alles_V1_0";
+
+    private static final String CURRENT_SHARED_V1_0_MODEL = "DMAV_HoheitsgrenzenAV_V1_0";
 
     private static final String[] DEFAULT_REPOSITORIES = {
         "https://models.geo.admin.ch",
@@ -45,6 +53,47 @@ final class ModelLoader {
             return compileModels(List.of(LEGACY_DMAV_MODEL));
         }
         return compileModels(modelNames);
+    }
+
+    String selectDmavModelForSources(Collection<String> sourceKeys) {
+        for (String key : sourceKeys) {
+            if (isDmavModelVersion(key, "_V1_1")) {
+                return CURRENT_DMAV_MODEL;
+            }
+        }
+        for (String key : sourceKeys) {
+            if (isDmavModelVersion(key, "_V1_0") && !CURRENT_SHARED_V1_0_MODEL.equals(key)) {
+                return LEGACY_DMAV_MODEL;
+            }
+        }
+        return CURRENT_DMAV_MODEL;
+    }
+
+    static Map<String, List<String>> directTransferTopics(
+            TransferDescription td, String umbrellaModelName) {
+        Model umbrella = findModel(td, umbrellaModelName);
+        if (umbrella == null) {
+            throw new IllegalArgumentException("Model not found: " + umbrellaModelName);
+        }
+
+        Map<String, List<String>> topicsByModel = new LinkedHashMap<>();
+        for (Model importedModel : umbrella.getImporting()) {
+            List<String> topics = new ArrayList<>();
+            Iterator<Element> elements = importedModel.iterator();
+            while (elements.hasNext()) {
+                Element element = elements.next();
+                if (element instanceof Topic) {
+                    Topic topic = (Topic) element;
+                    if (!topic.isAbstract() && !topic.isViewTopic()) {
+                        topics.add(topic.getScopedName(null));
+                    }
+                }
+            }
+            if (!topics.isEmpty()) {
+                topicsByModel.put(importedModel.getName(), topics);
+            }
+        }
+        return topicsByModel;
     }
 
     TransferDescription compileModels(Collection<String> modelNames) throws Ili2cFailure {
@@ -84,12 +133,27 @@ final class ModelLoader {
         return td;
     }
 
+    private static Model findModel(TransferDescription td, String modelName) {
+        Iterator<Model> models = td.iterator();
+        while (models.hasNext()) {
+            Model model = models.next();
+            if (modelName.equals(model.getName())) {
+                return model;
+            }
+        }
+        return null;
+    }
+
     private static boolean containsDmavVersion(Collection<String> modelNames, String suffix) {
         for (String modelName : modelNames) {
-            if (modelName != null && modelName.startsWith("DMAV") && modelName.endsWith(suffix)) {
+            if (isDmavModelVersion(modelName, suffix)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isDmavModelVersion(String modelName, String suffix) {
+        return modelName != null && modelName.startsWith("DMAV") && modelName.endsWith(suffix);
     }
 }

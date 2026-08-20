@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><ili:transfer xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS" xmlns:geom="http://www.interlis.ch/geometry/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:KGKCGC_FPDS2_V1_1="http://www.interlis.ch/xtf/2.4/KGKCGC_FPDS2_V1_1">
-<ili:headersection><ili:models><ili:model>KGKCGC_FPDS2_V1_1</ili:model></ili:models><ili:sender>ili2pg-4.8.0-2f360a8ebdee5250258ae4fe1ff5c21842a076ff</ili:sender></ili:headersection>
-<ili:datasection>
-<KGKCGC_FPDS2_V1_1:FPDS2 ili:bid="KGKCGC_FPDS2_V1_1.FPDS2">
-</KGKCGC_FPDS2_V1_1:FPDS2>
-</ili:datasection>
-</ili:transfer>
