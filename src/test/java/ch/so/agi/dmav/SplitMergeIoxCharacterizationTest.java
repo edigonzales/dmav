@@ -62,8 +62,11 @@ class SplitMergeIoxCharacterizationTest {
         Merger merger = new Merger();
         assertTrue(merger.run(Path.of("src/test/data/merger/myconfig_local.ini"), "449", tempDir));
 
-        IoxTestSupport.TransferSnapshot merged =
-                IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf"), dmav10Model);
+        IoxTestSupport.TransferSnapshot merged = IoxTestSupport.read(
+                tempDir.resolve("DMAV.449.xtf"),
+                dmav10Model,
+                FIXPUNKTE_AV_TYPE,
+                HOHEITSGRENZEN_AV_TYPE);
 
         assertBasketIdentityEquals(
                 IoxTestSupport.read(fixpunkteSource, dmav10Model).basket(FIXPUNKTE_AV_TYPE),
@@ -86,7 +89,8 @@ class SplitMergeIoxCharacterizationTest {
                 IoxTestSupport.read(lfpSource, dmav10Model).basket(FIXPUNKTE_LV_TYPE);
         IoxTestSupport.BasketSnapshot hfp =
                 IoxTestSupport.read(hfpSource, dmav10Model).basket(FIXPUNKTE_LV_TYPE);
-        IoxTestSupport.BasketSnapshot merged = IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf"), dmav10Model)
+        IoxTestSupport.BasketSnapshot merged = IoxTestSupport.read(
+                        tempDir.resolve("DMAV.449.xtf"), dmav10Model, FIXPUNKTE_LV_TYPE)
                 .basket(FIXPUNKTE_LV_TYPE);
 
         assertNotNull(lfp);
