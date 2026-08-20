@@ -26,7 +26,7 @@ jobs:
           cache: 'gradle'
           
       - name: Build with Gradle (SNAPSHOT)
-        if: ${{ success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/refactor/iox-tests-dmav11')}}
+        if: ${{ success() && github.ref == 'refs/heads/main'}}
         id: buildSnapshotLib
         run: ./gradlew clean build sourcesJar javadocJar 
 
