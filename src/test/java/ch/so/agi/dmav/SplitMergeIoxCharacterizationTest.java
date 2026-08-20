@@ -4,10 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.interlis.ili2c.metamodel.TransferDescription;
+
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +22,16 @@ class SplitMergeIoxCharacterizationTest {
             "DMAV_HoheitsgrenzenAV_V1_0.HoheitsgrenzenAV";
     private static final String FIXPUNKTE_LV_TYPE = "FixpunkteLV_V1_0.FixpunkteLV";
 
+    private static TransferDescription dmav10Model;
+
+    @BeforeAll
+    static void compileDmav10Model() throws Exception {
+        dmav10Model = IoxTestSupport.compileModel(
+                "DMAVTYM_Alles_V1_0",
+                "https://models.geo.admin.ch",
+                "https://models.interlis.ch");
+    }
+
     @Test
     void splitterPreservesBasketBidTidsAndReferences(@TempDir Path tempDir) throws Exception {
         Path input = Path.of("src/test/data/splitter/DMAV.449.xtf");
@@ -26,16 +39,18 @@ class SplitMergeIoxCharacterizationTest {
         Splitter splitter = new Splitter();
         assertTrue(splitter.run(input, "449", tempDir));
 
-        IoxTestSupport.TransferSnapshot source = IoxTestSupport.read(input);
+        IoxTestSupport.TransferSnapshot source = IoxTestSupport.read(input, dmav10Model);
 
         assertBasketIdentityEquals(
                 source.basket(FIXPUNKTE_AV_TYPE),
-                IoxTestSupport.read(tempDir.resolve("DMAV_FixpunkteAVKategorie3_V1_0.449.xtf"))
+                IoxTestSupport.read(
+                                tempDir.resolve("DMAV_FixpunkteAVKategorie3_V1_0.449.xtf"), dmav10Model)
                         .basket(FIXPUNKTE_AV_TYPE));
 
         assertBasketIdentityEquals(
                 source.basket(HOHEITSGRENZEN_AV_TYPE),
-                IoxTestSupport.read(tempDir.resolve("DMAV_HoheitsgrenzenAV_V1_0.449.xtf"))
+                IoxTestSupport.read(
+                                tempDir.resolve("DMAV_HoheitsgrenzenAV_V1_0.449.xtf"), dmav10Model)
                         .basket(HOHEITSGRENZEN_AV_TYPE));
     }
 
@@ -47,13 +62,14 @@ class SplitMergeIoxCharacterizationTest {
         Merger merger = new Merger();
         assertTrue(merger.run(Path.of("src/test/data/merger/myconfig_local.ini"), "449", tempDir));
 
-        IoxTestSupport.TransferSnapshot merged = IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf"));
+        IoxTestSupport.TransferSnapshot merged =
+                IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf"), dmav10Model);
 
         assertBasketIdentityEquals(
-                IoxTestSupport.read(fixpunkteSource).basket(FIXPUNKTE_AV_TYPE),
+                IoxTestSupport.read(fixpunkteSource, dmav10Model).basket(FIXPUNKTE_AV_TYPE),
                 merged.basket(FIXPUNKTE_AV_TYPE));
         assertBasketIdentityEquals(
-                IoxTestSupport.read(hoheitsgrenzenSource).basket(HOHEITSGRENZEN_AV_TYPE),
+                IoxTestSupport.read(hoheitsgrenzenSource, dmav10Model).basket(HOHEITSGRENZEN_AV_TYPE),
                 merged.basket(HOHEITSGRENZEN_AV_TYPE));
     }
 
@@ -66,10 +82,12 @@ class SplitMergeIoxCharacterizationTest {
         Merger merger = new Merger();
         assertTrue(merger.run(Path.of("src/test/data/merger/myconfig_local_multiple.ini"), "449", tempDir));
 
-        IoxTestSupport.BasketSnapshot lfp = IoxTestSupport.read(lfpSource).basket(FIXPUNKTE_LV_TYPE);
-        IoxTestSupport.BasketSnapshot hfp = IoxTestSupport.read(hfpSource).basket(FIXPUNKTE_LV_TYPE);
-        IoxTestSupport.BasketSnapshot merged =
-                IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf")).basket(FIXPUNKTE_LV_TYPE);
+        IoxTestSupport.BasketSnapshot lfp =
+                IoxTestSupport.read(lfpSource, dmav10Model).basket(FIXPUNKTE_LV_TYPE);
+        IoxTestSupport.BasketSnapshot hfp =
+                IoxTestSupport.read(hfpSource, dmav10Model).basket(FIXPUNKTE_LV_TYPE);
+        IoxTestSupport.BasketSnapshot merged = IoxTestSupport.read(tempDir.resolve("DMAV.449.xtf"), dmav10Model)
+                .basket(FIXPUNKTE_LV_TYPE);
 
         assertNotNull(lfp);
         assertNotNull(hfp);
