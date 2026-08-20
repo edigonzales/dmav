@@ -1,13 +1,14 @@
 package ch.so.agi.dmav;
 
 import ch.interlis.iom.IomObject;
-import ch.interlis.iom_j.xtf.XtfReader;
 import ch.interlis.iox.EndBasketEvent;
 import ch.interlis.iox.EndTransferEvent;
 import ch.interlis.iox.IoxEvent;
 import ch.interlis.iox.IoxException;
+import ch.interlis.iox.IoxReader;
 import ch.interlis.iox.ObjectEvent;
 import ch.interlis.iox.StartBasketEvent;
+import ch.interlis.iox_j.utility.ReaderFactory;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ final class IoxTestSupport {
     }
 
     static TransferSnapshot read(Path path) throws IoxException {
-        XtfReader reader = new XtfReader(path.toFile());
+        IoxReader reader = new ReaderFactory().createReader(path.toFile(), null);
         TransferSnapshot transfer = new TransferSnapshot();
         BasketSnapshot currentBasket = null;
 
