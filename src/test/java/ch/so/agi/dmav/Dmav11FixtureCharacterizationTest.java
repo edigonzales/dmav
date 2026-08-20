@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import ch.interlis.ili2c.metamodel.TransferDescription;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class Dmav11FixtureCharacterizationTest {
@@ -26,6 +29,17 @@ class Dmav11FixtureCharacterizationTest {
     private static final String NF_TID = "34776b74-5962-43db-aa7d-d91e32009943";
     private static final String HFP3_TID = "891fbd78-c4c4-4f18-b222-4ab8e43ed9a5";
 
+    private static TransferDescription dmav11Model;
+
+    @BeforeAll
+    static void compileDmav11Model() throws Exception {
+        dmav11Model = IoxTestSupport.compileModel(
+                "DMAVTYM_Alles_V1_1",
+                "src/test/data/dmav11",
+                "https://models.geo.admin.ch",
+                "https://models.interlis.ch");
+    }
+
     @Test
     void usesCurrentDmav11UmbrellaModel() throws IOException {
         String model = Files.readString(MODEL);
@@ -39,7 +53,7 @@ class Dmav11FixtureCharacterizationTest {
 
     @Test
     void fixturePinsBasketObjectAndReferenceIdentity() throws Exception {
-        IoxTestSupport.TransferSnapshot transfer = IoxTestSupport.read(FIXTURE);
+        IoxTestSupport.TransferSnapshot transfer = IoxTestSupport.read(FIXTURE, dmav11Model);
 
         assertEquals(1, transfer.getBaskets().size());
 
@@ -59,7 +73,7 @@ class Dmav11FixtureCharacterizationTest {
 
     @Test
     void allFixtureReferencesResolveToObjectsInTheFixture() throws Exception {
-        IoxTestSupport.TransferSnapshot transfer = IoxTestSupport.read(FIXTURE);
+        IoxTestSupport.TransferSnapshot transfer = IoxTestSupport.read(FIXTURE, dmav11Model);
 
         assertTrue(transfer.allTids().containsAll(transfer.allReferenceTargets()));
         assertEquals(Set.of(NF_TID), transfer.allReferenceTargets());
