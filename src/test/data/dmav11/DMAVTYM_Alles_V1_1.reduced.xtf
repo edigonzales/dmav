@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ili:transfer
+    xmlns:ili="http://www.interlis.ch/xtf/2.4/INTERLIS"
+    xmlns:geom="http://www.interlis.ch/geometry/1.0"
+    xmlns:DMAVTYM_Grafik_V1_0="http://www.interlis.ch/xtf/2.4/DMAVTYM_Grafik_V1_0"
+    xmlns:DMAV_FixpunkteAVKategorie3_V1_1="http://www.interlis.ch/xtf/2.4/DMAV_FixpunkteAVKategorie3_V1_1">
+  <ili:headersection>
+    <ili:models>
+      <ili:model>DMAV_FixpunkteAVKategorie3_V1_1</ili:model>
+      <ili:model>DMAVTYM_Grafik_V1_0</ili:model>
+    </ili:models>
+    <ili:sender>dmav-test-fixture</ili:sender>
+  </ili:headersection>
+  <ili:datasection>
+    <DMAV_FixpunkteAVKategorie3_V1_1:FixpunkteAVKategorie3 ili:bid="1331ee4d-9b33-466e-98a1-82eb52ed9c82">
+      <DMAV_FixpunkteAVKategorie3_V1_1:HFP3Nachfuehrung ili:tid="34776b74-5962-43db-aa7d-d91e32009943">
+        <DMAV_FixpunkteAVKategorie3_V1_1:NBIdent>BE0200000428</DMAV_FixpunkteAVKategorie3_V1_1:NBIdent>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Identifikator>202310033</DMAV_FixpunkteAVKategorie3_V1_1:Identifikator>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Beschreibung>FICTIF</DMAV_FixpunkteAVKategorie3_V1_1:Beschreibung>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Perimeter>
+          <geom:surface>
+            <geom:exterior>
+              <geom:polyline>
+                <geom:coord><geom:c1>2585220.452</geom:c1><geom:c2>1226476.604</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2590784.971</geom:c1><geom:c2>1229393.855</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2592328.629</geom:c1><geom:c2>1228387.146</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2591681.763</geom:c1><geom:c2>1225462.547</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2586477.431</geom:c1><geom:c2>1223449.129</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2585227.803</geom:c1><geom:c2>1223610.790</geom:c2></geom:coord>
+                <geom:coord><geom:c1>2585220.452</geom:c1><geom:c2>1226476.604</geom:c2></geom:coord>
+              </geom:polyline>
+            </geom:exterior>
+          </geom:surface>
+        </DMAV_FixpunkteAVKategorie3_V1_1:Perimeter>
+        <DMAV_FixpunkteAVKategorie3_V1_1:GueltigerEintrag>2023-12-07T12:00:00</DMAV_FixpunkteAVKategorie3_V1_1:GueltigerEintrag>
+      </DMAV_FixpunkteAVKategorie3_V1_1:HFP3Nachfuehrung>
+      <DMAV_FixpunkteAVKategorie3_V1_1:HFP3 ili:tid="891fbd78-c4c4-4f18-b222-4ab8e43ed9a5">
+        <DMAV_FixpunkteAVKategorie3_V1_1:NBIdent>BE0200000108</DMAV_FixpunkteAVKategorie3_V1_1:NBIdent>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Nummer>9998</DMAV_FixpunkteAVKategorie3_V1_1:Nummer>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Geometrie>
+          <geom:coord><geom:c1>2587938.765</geom:c1><geom:c2>1226259.673</geom:c2></geom:coord>
+        </DMAV_FixpunkteAVKategorie3_V1_1:Geometrie>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Hoehengeometrie>873.987</DMAV_FixpunkteAVKategorie3_V1_1:Hoehengeometrie>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Lagegenauigkeit>0.03</DMAV_FixpunkteAVKategorie3_V1_1:Lagegenauigkeit>
+        <DMAV_FixpunkteAVKategorie3_V1_1:IstLagezuverlaessig>true</DMAV_FixpunkteAVKategorie3_V1_1:IstLagezuverlaessig>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Hoehengenauigkeit>0.005</DMAV_FixpunkteAVKategorie3_V1_1:Hoehengenauigkeit>
+        <DMAV_FixpunkteAVKategorie3_V1_1:IstHoehenzuverlaessig>true</DMAV_FixpunkteAVKategorie3_V1_1:IstHoehenzuverlaessig>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Textposition>
+          <DMAVTYM_Grafik_V1_0:Textposition>
+            <DMAVTYM_Grafik_V1_0:Position>
+              <geom:coord><geom:c1>2587939.465</geom:c1><geom:c2>1226260.373</geom:c2></geom:coord>
+            </DMAVTYM_Grafik_V1_0:Position>
+            <DMAVTYM_Grafik_V1_0:Orientierung>100.0</DMAVTYM_Grafik_V1_0:Orientierung>
+            <DMAVTYM_Grafik_V1_0:HReferenzpunkt>Left</DMAVTYM_Grafik_V1_0:HReferenzpunkt>
+            <DMAVTYM_Grafik_V1_0:VReferenzpunkt>Bottom</DMAVTYM_Grafik_V1_0:VReferenzpunkt>
+          </DMAVTYM_Grafik_V1_0:Textposition>
+        </DMAV_FixpunkteAVKategorie3_V1_1:Textposition>
+        <DMAV_FixpunkteAVKategorie3_V1_1:Entstehung ili:ref="34776b74-5962-43db-aa7d-d91e32009943"/>
+      </DMAV_FixpunkteAVKategorie3_V1_1:HFP3>
+    </DMAV_FixpunkteAVKategorie3_V1_1:FixpunkteAVKategorie3>
+  </ili:datasection>
+</ili:transfer>
