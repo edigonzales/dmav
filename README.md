@@ -7,11 +7,10 @@ Werkzeugkasten für das Handling mit DMAV-Transferdateien:
 
 Die Verarbeitung erfolgt ereignisbasiert mit **iox-ili**. Die aktuelle DMAV-Modellbasis ist `DMAVTYM_Alles_V1_1` (DMAV Version 1.1). Legacy-Daten auf Basis `DMAVTYM_Alles_V1_0` werden weiterhin unterstützt.
 
-Snapshot-Versionen:
-- https://s01.oss.sonatype.org/content/repositories/snapshots/io/github/sogis/dmav/ -> X.Y.Z-SNAPSHOT -> dmav-X.Y.Z-Datum.Uhrzeit-all.jar
+Snapshot-/Entwicklungsbuilds:
+- GitHub Actions-Artefakte aus dem `main`-Branch: https://github.com/edigonzales/dmav/actions
 
 Release-Versionen:
-- https://s01.oss.sonatype.org/content/repositories/releases/io/github/sogis/dmav/
 - https://github.com/edigonzales/dmav/releases
 
 ## Anforderungen

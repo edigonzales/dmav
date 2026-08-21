@@ -4,10 +4,7 @@ import java.util.Locale
 plugins {
     id 'application'
     id 'org.graalvm.buildtools.native' version '1.1.6'
-    id 'maven-publish'
     id 'com.gradleup.shadow' version '9.3.1'
-    id 'signing'
-    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
     id 'org.jreleaser' version '1.25.0'
 }
 
@@ -110,67 +107,6 @@ tasks.named('test') {
 run {
     //args = ["--help"]
     args = ["merge", "--config=myconfigAAAAA.ini", "--fosnr=449", "--out=/Users/stefan/tmp"]
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-javadoc.failOnError = false
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-
-            pom {
-                name = "dmav"
-                url = "https://github.com/sogis/dmav"
-                description = "dmav"
-                scm {
-                    connection = "scm:git:https@github.com/sogis/dmav"
-                    developerConnection = "scm:git:https@github.com/sogis/dmav"
-                    url = "https://github.com/sogis/dmav"
-                }
-                licenses {
-                    license {
-                        name = "MIT"
-                        url = "https://github.com/sogis/dmav/blob/master/LICENSE"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "edigonzales"
-                        name = "Stefan Ziegler"
-                    }
-                }
-            }
-        }
-    }
-}
-
-if (!version.toString().endsWith("SNAPSHOT")) {
-    signing {
-        sign publishing.publications.mavenJava
-    }
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
-            password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
-        }
-    }
 }
 
 jreleaser {
