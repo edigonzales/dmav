@@ -70,17 +70,22 @@ def nativeImageExecutable = nativeJavaLauncher.map { launcher ->
 }
 
 def nativeGcArgument = nativeImageExecutable.map { File executable ->
-    List<String> helpCommand = executable.name.toLowerCase(Locale.ROOT).endsWith('.cmd')
-            ? ['cmd.exe', '/c', executable.absolutePath, '--help']
-            : [executable.absolutePath, '--help']
-    Process helpProcess = new ProcessBuilder(helpCommand)
-            .redirectErrorStream(true)
-            .start()
-    String help = new String(helpProcess.inputStream.bytes, StandardCharsets.UTF_8)
-    helpProcess.waitFor()
-    String gc = help.contains("'G1'") ? 'G1' : 'serial'
-    logger.lifecycle("Native Image GC: ${gc}")
-    "--gc=${gc}"
+    try {
+        List<String> helpCommand = executable.name.toLowerCase(Locale.ROOT).endsWith('.cmd')
+                ? ['cmd.exe', '/c', executable.absolutePath, '--help']
+                : [executable.absolutePath, '--help']
+        Process helpProcess = new ProcessBuilder(helpCommand)
+                .redirectErrorStream(true)
+                .start()
+        String help = new String(helpProcess.inputStream.bytes, StandardCharsets.UTF_8)
+        int exitCode = helpProcess.waitFor()
+        String gc = exitCode == 0 && help.contains("'G1'") ? 'G1' : 'serial'
+        logger.lifecycle("Native Image GC: ${gc}")
+        "--gc=${gc}"
+    } catch (Exception exception) {
+        logger.lifecycle("Native Image GC probe failed; using serial GC: ${exception.message}")
+        '--gc=serial'
+    }
 }
 
 graalvmNative {
