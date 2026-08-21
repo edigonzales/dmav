@@ -16,7 +16,7 @@ Release-Versionen:
 
 ## Anforderungen
 
-Java 11 oder grösser.
+Java 11 oder grösser zur Ausführung. Für den Gradle-Build wird ein JDK 17 oder grösser benötigt; die CI verwendet JDK 21.
 
 ## Benutzung
 
@@ -77,6 +77,21 @@ Die Testbasis enthält einen reduzierten Ausschnitt des offiziellen DMAV-1.1-Tes
 ```bash
 ./gradlew clean test
 ```
+
+## Native Image
+
+Für das Native-Image-Build wird lokal GraalVM CE 25.2.4 verwendet. Der Gradle-Wrapper 9.1.0 kann direkt mit dieser GraalVM laufen:
+
+```bash
+export GRAALVM_HOME=/Users/stefan/.sdkman/candidates/java/25.2.4-graalce
+export JAVA_HOME="$GRAALVM_HOME"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+./gradlew nativeCompile
+build/native/nativeCompile/dmav --help
+```
+
+Auf GraalVM Community Edition wird automatisch Serial GC verwendet. Falls der konkrete GraalVM-Build G1 anbietet, wird G1 automatisch aktiviert. Die erzeugten Release-Binaries heißen `dmav-linux-x86_64`, `dmav-windows-x86_64.exe` und `dmav-osx-aarch_64`.
 
 ## Release
 

@@ -12,16 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
-      packages: write
+      contents: read
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
+      - name: Set up JDK 21 for Gradle
+        uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'gradle'
           
@@ -45,6 +44,14 @@ jobs:
           name: reports
           path: build/reports/tests/
 
+      - name: Upload JVM release artifact
+        if: ${{ github.ref == 'refs/heads/stable' && steps.buildReleaseLib.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jvm-release
+          path: build/libs/dmav-*-all.jar
+          if-no-files-found: error
+
       # - name: Decode
       #   if: always() && (steps.buildSnapshotLib.outcome == 'success' || steps.buildReleaseLib.outcome == 'success')
       #   run: |
@@ -65,12 +72,118 @@ jobs:
       #     OSSRH_USERNAME: ${{secrets.OSSRH_USERNAME}}
       #     OSSRH_PASSWORD: ${{secrets.OSSRH_PASSWORD}} 
 
-      - name: Release library (RELEASE)
-        if: ${{ success() && github.ref == 'refs/heads/stable'}}
-        # if: ${{ success() && github.ref == 'refs/heads/main'}}
+  native:
+    name: native-${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x86_64
+            runner: ubuntu-latest
+            executable: dmav
+            asset: dmav-linux-x86_64
+          - target: windows-x86_64
+            runner: windows-latest
+            executable: dmav.exe
+            asset: dmav-windows-x86_64.exe
+          - target: osx-aarch_64
+            runner: macos-14
+            executable: dmav
+            asset: dmav-osx-aarch_64
+
+    runs-on: ${{ matrix.runner }}
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up GraalVM Community JDK 25
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          set-java-home: 'false'
+
+      - name: Build native image
+        shell: bash
+        run: ./gradlew -Dorg.gradle.java.installations.paths="$GRAALVM_HOME" nativeCompile
+
+      - name: Smoke-test native image
+        shell: bash
+        run: build/native/nativeCompile/${{ matrix.executable }} --help
+
+      - name: Prepare release asset
+        shell: bash
         run: |
-          ./gradlew -s jreleaserRelease -Drelease=
-        # run: |
-        #   ./gradlew -s jreleaserRelease 
+          mkdir -p build/native-releases
+          cp "build/native/nativeCompile/${{ matrix.executable }}" "build/native-releases/${{ matrix.asset }}"
+
+      - name: Upload native image
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: build/native-releases/${{ matrix.asset }}
+          if-no-files-found: error
+
+      - name: Upload native build reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-report-${{ matrix.target }}
+          path: build/reports/native/
+          if-no-files-found: ignore
+
+  release:
+    name: release
+    if: ${{ github.ref == 'refs/heads/stable' }}
+    needs:
+      - build
+      - native
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Download native images
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: build/native-releases
+          merge-multiple: true
+
+      - name: Download JVM release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jvm-release
+          path: build/libs
+
+      - name: Show release assets
+        run: ls -la build/native-releases
+
+      - name: Release library and native images
+        run: ./gradlew -s jreleaserRelease -Drelease=
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

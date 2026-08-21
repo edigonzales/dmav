@@ -1,10 +1,14 @@
+import java.nio.charset.StandardCharsets
+import java.util.Locale
+
 plugins {
     id 'application'
+    id 'org.graalvm.buildtools.native' version '1.1.6'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.3.1'
     id 'signing'
-    id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
-    id 'org.jreleaser' version '1.17.0'
+    id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
+    id 'org.jreleaser' version '1.25.0'
 }
 
 group = 'io.github.sogis'
@@ -12,9 +16,6 @@ group = 'io.github.sogis'
 version '0.0.11'+System.getProperty('release','-SNAPSHOT')
 
 def myArtifactId = "dmav"
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 compileJava {
     options.compilerArgs.addAll(['--release', '11'])
@@ -33,7 +34,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'info.picocli:picocli:4.7.6'
-    implementation 'info.picocli:picocli-codegen:4.7.6'
     annotationProcessor 'info.picocli:picocli-codegen:4.7.6'
 
     implementation 'ch.interlis:iox-ili:1.24.4'
@@ -42,8 +42,56 @@ dependencies {
 }
 
 java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+def nativeJavaLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(25)
+    vendor = JvmVendorSpec.matching('GraalVM Community')
+}
+
+def nativeImageExecutable = nativeJavaLauncher.map { launcher ->
+    File binDirectory = launcher.metadata.installationPath.asFile.toPath().resolve('bin').toFile()
+    boolean windows = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+    List<File> candidates = windows
+            ? [new File(binDirectory, 'native-image.cmd'),
+               new File(binDirectory, 'native-image.exe'),
+               new File(binDirectory, 'native-image')]
+            : [new File(binDirectory, 'native-image')]
+    File executable = candidates.find { it.isFile() }
+    if (executable == null) {
+        throw new GradleException("No native-image executable found below ${binDirectory}")
+    }
+    executable
+}
+
+def nativeGcArgument = nativeImageExecutable.map { File executable ->
+    List<String> helpCommand = executable.name.toLowerCase(Locale.ROOT).endsWith('.cmd')
+            ? ['cmd.exe', '/c', executable.absolutePath, '--help']
+            : [executable.absolutePath, '--help']
+    Process helpProcess = new ProcessBuilder(helpCommand)
+            .redirectErrorStream(true)
+            .start()
+    String help = new String(helpProcess.inputStream.bytes, StandardCharsets.UTF_8)
+    helpProcess.waitFor()
+    String gc = help.contains("'G1'") ? 'G1' : 'serial'
+    logger.lifecycle("Native Image GC: ${gc}")
+    "--gc=${gc}"
+}
+
+graalvmNative {
+    binaries {
+        named('main') {
+            imageName.set('dmav')
+            mainClass.set(application.mainClass)
+            javaLauncher.set(nativeJavaLauncher)
+            buildArgs.add(nativeGcArgument)
+            buildArgs.add('-H:+ReportExceptionStackTraces')
+        }
     }
 }
 
@@ -151,6 +199,25 @@ jreleaser {
                 groupId = 'io.github.sogis'
                 artifactId = myArtifactId
                 version = '11'
+            }
+        }
+
+        appNative {
+            active = 'RELEASE'
+            distributionType = 'FLAT-BINARY'
+            stereotype = 'CLI'
+
+            artifact {
+                path = 'build/native-releases/dmav-linux-x86_64'
+                platform = 'linux-x86_64'
+            }
+            artifact {
+                path = 'build/native-releases/dmav-windows-x86_64.exe'
+                platform = 'windows-x86_64'
+            }
+            artifact {
+                path = 'build/native-releases/dmav-osx-aarch_64'
+                platform = 'osx-aarch_64'
             }
         }
     }
