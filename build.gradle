@@ -49,22 +49,21 @@ java {
     }
 }
 
-def nativeJavaLauncher = javaToolchains.launcherFor {
-    languageVersion = JavaLanguageVersion.of(25)
-    vendor = JvmVendorSpec.matching('GraalVM Community')
-}
+def nativeImageHome = providers.environmentVariable('GRAALVM_HOME')
+        .orElse(providers.environmentVariable('JAVA_HOME'))
 
-def nativeImageExecutable = nativeJavaLauncher.map { launcher ->
-    File binDirectory = launcher.metadata.installationPath.asFile.toPath().resolve('bin').toFile()
+def nativeImageExecutable = nativeImageHome.map { String home ->
+    File installationDirectory = new File(home)
     boolean windows = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
     List<File> candidates = windows
-            ? [new File(binDirectory, 'native-image.cmd'),
-               new File(binDirectory, 'native-image.exe'),
-               new File(binDirectory, 'native-image')]
-            : [new File(binDirectory, 'native-image')]
+            ? [new File(installationDirectory, 'bin/native-image.cmd'),
+               new File(installationDirectory, 'bin/native-image.exe'),
+               new File(installationDirectory, 'bin/native-image')]
+            : [new File(installationDirectory, 'bin/native-image'),
+               new File(installationDirectory, 'lib/svm/bin/native-image')]
     File executable = candidates.find { it.isFile() }
     if (executable == null) {
-        throw new GradleException("No native-image executable found below ${binDirectory}")
+        throw new GradleException("No native-image executable found below ${installationDirectory}")
     }
     executable
 }
@@ -89,11 +88,11 @@ def nativeGcArgument = nativeImageExecutable.map { File executable ->
 }
 
 graalvmNative {
+    toolchainDetection = false
     binaries {
         named('main') {
             imageName.set('dmav')
             mainClass.set(application.mainClass)
-            javaLauncher.set(nativeJavaLauncher)
             buildArgs.add(nativeGcArgument)
             buildArgs.add('-H:+ReportExceptionStackTraces')
         }

@@ -116,7 +116,7 @@ jobs:
 
       - name: Build native image
         shell: bash
-        run: ./gradlew -Dorg.gradle.java.installations.paths="$GRAALVM_HOME" nativeCompile
+        run: ./gradlew nativeCompile
 
       - name: Smoke-test native image
         shell: bash
